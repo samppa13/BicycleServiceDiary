@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PasswordField from '../components/PasswordField'
 import { validatePassword } from '../validators/passwordValidation'
+import { useAuth } from '../hooks/useAuth'
 
 const RegisterPage = () => {
     const [username, setUsername] = useState<string>('')
@@ -9,6 +10,29 @@ const RegisterPage = () => {
     const [message, setMessage] = useState<string>('')
 
     const navigate = useNavigate()
+    const { user, loading, logout } = useAuth()
+
+    // Show loading text if auth is still loading
+    if (loading) {
+        return <p>Loading...</p>
+    }
+
+    // If user is already logged in, show info and options
+    if (user) {
+        return (
+            <div>
+                <p>You are logged in as {user.username}, you must log out before you can register a new user.</p>
+                {/* Navigate back to home */}
+                <button onClick={() => navigate('/')}>
+                    Cancel
+                </button>
+                {/* Logout current user */}
+                <button onClick={() => logout()}>
+                    Logout
+                </button>
+            </div>
+        )
+    }
 
     // Function to handle user registration
     const handleRegister = async (event: React.FormEvent) => {
