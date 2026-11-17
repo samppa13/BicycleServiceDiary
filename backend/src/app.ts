@@ -4,6 +4,7 @@ import connectDB from './config/db'
 import authRoutes from './routes/auth'
 import cors, { CorsOptions } from 'cors'
 import cookieParser from 'cookie-parser'
+import bicycleRoutes from './routes/bicycle'
 
 connectDB()
 
@@ -20,6 +21,7 @@ app.use(cookieParser())
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use('/api/auth', authRoutes)
+app.use('/api/bicycles', bicycleRoutes)
 
 // Start the server
 app.listen(port, () => {
