@@ -12,17 +12,38 @@ interface AuthRequest extends Request {
 // Create a new bicycle
 router.post('/', verifyToken, async (request: AuthRequest, response: Response) => {
     try {
-        const { make, modelYear } = request.body
+        const {
+            brand,
+            modelName,
+            bicycleType,
+            modelYear,
+            description,
+            serialNumber,
+            purchaseDate,
+            purchasePrice,
+            color,
+            frameSize,
+            wheelSize
+        } = request.body
         const userId = request.user?.id
 
-        if (!make || !modelYear) {
-            response.status(400).json({ error: 'Bicycle must have a make and a model year' })
+        if (!brand || !modelName || !bicycleType) {
+            response.status(400).json({ error: 'Bicycle must have a brand, model and type' })
             return
         }
 
         const newBicycle: IBicycle = new Bicycle({
-            make,
+            brand,
+            modelName,
+            bicycleType,
             modelYear,
+            description,
+            serialNumber,
+            purchaseDate,
+            purchasePrice,
+            color,
+            frameSize,
+            wheelSize,
             owner: userId
         })
         await newBicycle.save()
@@ -53,9 +74,21 @@ router.get('/:id', verifyToken, async (request: AuthRequest, response: Response)
 // Update a bicycle by ID
 router.put('/:id', verifyToken, async (request: AuthRequest, response: Response) => {
     try {
-        const { make, modelYear } = request.body
-        if (!make || !modelYear) {
-            response.status(400).json({ error: 'Bicycle must have a make and a model year'})
+        const {
+            brand,
+            modelName,
+            bicycleType,
+            modelYear,
+            description,
+            serialNumber,
+            purchaseDate,
+            purchasePrice,
+            color,
+            frameSize,
+            wheelSize
+        } = request.body
+        if (!brand || !modelName || !bicycleType) {
+            response.status(400).json({ error: 'Bicycle must have a brand, model and type' })
             return
         }
     
@@ -64,8 +97,23 @@ router.put('/:id', verifyToken, async (request: AuthRequest, response: Response)
                 _id: request.params.id,
                 owner: request.user?.id
             },
-            { make, modelYear },
-            { returnDocument: 'after' }
+            {
+                brand,
+                modelName,
+                bicycleType,
+                modelYear,
+                description,
+                serialNumber,
+                purchaseDate,
+                purchasePrice,
+                color,
+                frameSize,
+                wheelSize
+            },
+            {
+                returnDocument: 'after',
+                runValidators: true
+            }
         )
         if (!updatedBicycle) {
             response.status(404).json({ error: 'Bicycle not found' })
