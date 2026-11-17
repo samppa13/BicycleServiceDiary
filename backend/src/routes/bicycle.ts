@@ -71,6 +71,19 @@ router.get('/:id', verifyToken, async (request: AuthRequest, response: Response)
     }
 })
 
+// Get all bicycles by the logged in user
+router.get('/', verifyToken, async (request: AuthRequest, response: Response) => {
+    try {
+        const bicycles = await Bicycle.find(
+            { owner: request.user?.id }
+        ).select('brand modelName bicycleType')
+
+        response.status(200).json(bicycles)
+    } catch (error) {
+        response.status(500).json({ error: 'Error fetching bicycles' })
+    }
+})
+
 // Update a bicycle by ID
 router.put('/:id', verifyToken, async (request: AuthRequest, response: Response) => {
     try {
