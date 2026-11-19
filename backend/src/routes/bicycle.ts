@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express'
 import { JwtPayload } from 'jsonwebtoken'
 import { verifyToken } from '../middleware/auth'
 import { Bicycle, IBicycle } from '../models/Bicycle'
+import mongoose from 'mongoose'
 
 const router: Router = Router()
 
@@ -56,6 +57,12 @@ router.post('/', verifyToken, async (request: AuthRequest, response: Response) =
 // Get a bicycle by ID
 router.get('/:id', verifyToken, async (request: AuthRequest, response: Response) => {
     try {
+        const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            response.status(404).json({ error: 'Bicycle not found' })
+            return
+        }
+
         const bicycle: IBicycle | null = await Bicycle.findOne({
             _id: request.params.id,
             owner: request.user?.id
