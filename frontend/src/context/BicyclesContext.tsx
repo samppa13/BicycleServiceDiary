@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useRef, useState, type ReactNode } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import type { IBicycle } from '../types/types'
+import { useApi } from '../hooks/useApi'
 
 interface BicyclesContextSettings {
     bicycles: IBicycle[] | null
@@ -21,6 +22,9 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const ctrlRef = useRef<AbortController | null>(null)
     const { accessToken } = useAuth()
+    const { apiFetch } = useApi()
+
+    const APIURL: string = 'http://localhost:1234/api/bicycles'
 
     // Fetch bicycles owned by current user
     const fetchBicycles = useCallback(async () => {
@@ -38,12 +42,9 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
         setLoading(true)
 
         try {
-            const response: Response = await fetch('http://localhost:1234/api/bicycles', {
+            const response: Response = await apiFetch(APIURL, {
                 method: 'GET',
-                signal: abortctrl.signal,
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
+                signal: abortctrl.signal
             })
 
             const data = await response.json()
@@ -62,11 +63,8 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Fetch single bicycle by id
     const fetchBicycle = async (id: string) => {
-        const response: Response = await fetch(`http://localhost:1234/api/bicycles/${id}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
+        const response: Response = await apiFetch(`${APIURL}/${id}`, {
+            method: 'GET'
         })
 
         const data = await response.json()
@@ -86,11 +84,10 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Create a new bicycle
     const createBicycle = async (bicycle: IBicycle) => {
-        const response: Response = await fetch('http://localhost:1234/api/bicycles', {
+        const response: Response = await apiFetch(APIURL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(bicycle)
         })
@@ -108,11 +105,10 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Update existing bicycle
     const updateBicycle = async (bicycle: IBicycle) => {
-        const response: Response = await fetch(`http://localhost:1234/api/bicycles/${bicycle._id}`, {
+        const response: Response = await apiFetch(`${APIURL}/${bicycle._id}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(bicycle)
         })
@@ -134,11 +130,8 @@ export const BicyclesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Delete bicycle
     const deleteBicycle = async (id: string) => {
-        const response: Response = await fetch(`http://localhost:1234/api/bicycles/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
+        const response: Response = await apiFetch(`${APIURL}/${id}`, {
+            method: 'DELETE'
         })
 
         const data = await response.json()

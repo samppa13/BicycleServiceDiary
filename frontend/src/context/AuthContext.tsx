@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, type ReactNode } from 'react'
+import React, { createContext, useEffect, useRef, useState, type ReactNode } from 'react'
 
 interface AuthContextSettings {
     user: { id: string, username: string } | null
@@ -6,6 +6,7 @@ interface AuthContextSettings {
     loading: boolean
     login: (username: string, password: string) => Promise<void>
     logout: () => void
+    refreshAuth: () => Promise<string>
 }
 
 // Create authentication context for sharing user data and authentication functions
@@ -16,35 +17,58 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [accessToken, setAccessToken] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
 
+    const refreshPromise = useRef<Promise<string> | null>(null)
+
     // Refresh access token and restore user session
     const refreshAuth = async () => {
-        try {
-            const response: Response = await fetch('http://localhost:1234/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include'
-            })
-
-            const data = await response.json()
-            if (!response.ok) {
-                throw new Error(data.error || 'Invalid refresh token')
-            }
-
-            // Update access token and user data
-            setAccessToken(data.accessToken)
-            setUser(data.user)
-        } catch (error) {
-            // Clear authentication data if token refresh fails
-            setUser(null)
-            setAccessToken(null)
-        } finally {
-            // Finish loading after authentication check
-            setLoading(false)
+        // Reuse an ongoing refresh request to prevent duplicate requests
+        if (refreshPromise.current) {
+            return refreshPromise.current
         }
+
+        refreshPromise.current = (async () => {
+            try {
+                const response: Response = await fetch('http://localhost:1234/api/auth/refresh', {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+
+                const data = await response.json()
+                if (!response.ok) {
+                    throw new Error(data.error || 'Invalid refresh token')
+                }
+
+                // Update access token and user data
+                setAccessToken(data.accessToken)
+                setUser(data.user)
+
+                return data.accessToken
+            } catch (error) {
+                // Clear authentication data if token refresh fails
+                setUser(null)
+                setAccessToken(null)
+                throw error
+            } finally {
+                // Mark authentication check as complete
+                setLoading(false)
+                refreshPromise.current = null
+            }
+        })()
+
+        return refreshPromise.current
     }
 
     // Check and restore authentication when the app starts
     useEffect(() => {
-        refreshAuth()
+        const checkAuth = async () => {
+            try {
+                await refreshAuth()
+            } catch (error) {
+                // No valid refresh token found
+            }
+        }
+
+        checkAuth()
     }, [])
 
     // Log in user and update authentication state
@@ -74,12 +98,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Log out user and clear authentication data
     const logout = async () => {
+        setUser(null)
+        setAccessToken(null)
+
         await fetch('http://localhost:1234/api/auth/logout', {
             method: 'POST',
             credentials: 'include'
         })
-        setUser(null)
-        setAccessToken(null)
     }
 
     // Provide authentication data and functions to child components
@@ -89,7 +114,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             accessToken,
             loading,
             login,
-            logout
+            logout,
+            refreshAuth
         }}>
             { children }
         </AuthContext.Provider>
