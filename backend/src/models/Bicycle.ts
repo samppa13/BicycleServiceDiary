@@ -8,7 +8,7 @@ interface IBicycle extends Document {
     modelYear: number
     description: string
     serialNumber: string
-    purchaseDate: Date
+    purchaseDate: string
     purchasePrice: number
     color: string
     frameSize: string
@@ -25,7 +25,7 @@ const bicycleSchema: Schema = new Schema(
         modelYear: { type: Number },
         description: { type: String },
         serialNumber: { type: String },
-        purchaseDate: { type: Date },
+        purchaseDate: { type: String },
         purchasePrice: { type: Number },
         color: { type: String },
         frameSize: { type: String },

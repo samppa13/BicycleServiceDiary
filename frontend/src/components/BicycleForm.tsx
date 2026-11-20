@@ -104,7 +104,7 @@ const BicycleForm: React.FC<BicycleFormProps> = ({ bicycle, message, errorMessag
                 <div>
                     <label htmlFor='purchaseDate'>Purchase date</label>
                     <input
-                        type='text'
+                        type='date'
                         name='purchaseDate'
                         id='purchaseDate'
                         value={formData.purchaseDate ?? ''}
